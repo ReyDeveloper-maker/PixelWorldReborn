@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
+<meta name="theme-color" content="#1a2234">
+<title>PixelWorld</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ROTATE OVERLAY -->
+<div id="rotOverlay"><div class="rot-icon"></div><p>ROTATE YOUR DEVICE<br>TO LANDSCAPE MODE</p></div>
+
+<!-- LOADING SCREEN -->
+<div id="loadingScreen">
+  <div class="pw-logo">PIXELWORLD</div>
+  <div class="pw-logo-sub">SANDBOX GAME</div>
+  <div id="loadBar"><div id="loadFill"></div></div>
+  <div id="loadTxt">INITIALIZING...</div>
+  <div id="loadSteps"></div>
+</div>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen" style="display:none">
+  <div id="authBg"></div>
+  <div id="authBox">
+    <div class="auth-logo-wrap">
+      <div class="auth-title">PIXELWORLD</div>
+      <div class="auth-sub">SANDBOX ADVENTURE</div>
+    </div>
+    <div class="authTabs">
+      <div class="aTab on" id="tabLogin" onclick="switchTab('login')">LOGIN</div>
+      <div class="aTab" id="tabReg" onclick="switchTab('reg')">REGISTER</div>
+    </div>
+    <input class="aField" id="aUser" type="text" maxlength="16" placeholder="Username (3-16 chars)"
+      autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <input class="aField" id="aPass" type="password" maxlength="32" placeholder="Password (4+ chars)" autocomplete="off">
+    <div id="authErr"></div><div id="authOk"></div>
+    <button class="aBtn" onclick="doAuth()">ENTER WORLD</button>
+    <div class="online-strip"><div class="online-dot"></div>Data saved locally</div>
+  </div>
+</div>
+
+<!-- WORLD SELECT -->
+<div id="worldScreen">
+  <div class="ws-title">MY WORLDS</div>
+  <div class="ws-sub" id="wsSub"></div>
+  <div id="worldList"></div>
+  <button class="wsBtn primary" onclick="openNWModal()">+ CREATE NEW WORLD</button>
+  <button class="wsBtn secondary" onclick="backToAuth()">BACK TO LOGIN</button>
+</div>
+
+<!-- NEW WORLD MODAL -->
+<div id="nwModal">
+  <div id="nwBox">
+    <h3>CREATE WORLD</h3>
+    <input class="aField" id="nwName" type="text" maxlength="20" placeholder="World name..."
+      autocomplete="off" autocorrect="off">
+    <div style="color:rgba(255,255,255,.3);font-size:8px;letter-spacing:1px;margin-bottom:7px;">WORLD TYPE</div>
+    <div class="wtBtns">
+      <div class="wtBtn on" id="wt_normal" onclick="selWT('normal')">NORMAL<small>Forest &amp; caves</small></div>
+      <div class="wtBtn" id="wt_flat" onclick="selWT('flat')">FLAT<small>Open plains</small></div>
+      <div class="wtBtn" id="wt_cave" onclick="selWT('cave')">CAVES<small>Underground</small></div>
+    </div>
+    <div id="nwErr"></div>
+    <div class="nwBtns">
+      <button class="aBtn" style="flex:1" onclick="createWorld()">CREATE</button>
+      <button class="aBtn" style="flex:1;background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.3)" onclick="closeNWModal()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME CANVAS -->
+<canvas id="gc" style="display:none"></canvas>
+
+<!-- HUD -->
+<div id="hud" style="display:none">
+  <div class="hud-chip hpBarWrap"><div class="hp-hearts"></div></div>
+  <div class="hud-chip" id="hudGems" style="gap:4px">
+    <div class="gemDot"></div><span>0</span>
+  </div>
+  <div class="hud-chip" id="hudLv">LV 1</div>
+  <div id="hudSpacer"></div>
+  <div class="hud-chip" id="hudWorld"></div>
+</div>
+
+<!-- TOP BUTTONS -->
+<div id="topRight" style="display:none"></div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- EDIT/PUNCH TOGGLE (beside hotbar, left) -->
+<button id="editToggleBtn" style="display:none" onclick="toggleEditMode()">HIT</button>
+
+<!-- HOTBAR (8 slots now) -->
+<div id="hotbar" style="display:none">
+  <div class="hs on" data-i="0"></div>
+  <div class="hs" data-i="1"></div>
+  <div class="hs" data-i="2"></div>
+  <div class="hs" data-i="3"></div>
+  <div class="hs" data-i="4"></div>
+  <div class="hs" data-i="5"></div>
+  <div class="hs" data-i="6"></div>
+  <div class="hs" data-i="7"></div>
+</div>
+
+<!-- CONTROLS -->
+<div id="ctrl" style="display:none">
+  <div id="dpad">
+    <div class="db" id="dl"></div>
+    <div class="db" id="du"></div>
+    <div class="db" id="dr"></div>
+    <div id="dcenter"></div>
+  </div>
+  <div id="abts">
+    <div class="ab" id="bjump">JUMP</div>
+    <div class="ab" id="buse">USE</div>
+    <div class="ab" id="bpunch">HIT</div>
+  </div>
+</div>
+
+<!-- CHAT BUBBLE -->
+<div id="chatBubble"></div>
+
+<!-- INVENTORY PANEL -->
+<div class="panel" id="invPanel">
+  <div class="panel-head">INVENTORY</div>
+  <div id="invContainer">
+    <div class="inv-top">
+      <div id="invPlayerBox"><canvas id="invPlayerCanvas" style="image-rendering:pixelated"></canvas></div>
+      <div class="inv-stats-box" id="invStats"></div>
+    </div>
+    <div class="inv-section-label">Items</div>
+    <div id="invGrid"></div>
+  </div>
+  <button class="p-close" onclick="closeInv()">CLOSE</button>
+</div>
+
+<!-- SETTINGS PANEL -->
+<div class="panel" id="settPanel">
+  <div class="panel-head">SETTINGS</div>
+  <div id="settWrap">
+    <div class="s-section">
+      <h3>Graphics</h3>
+      <div class="s-row"><div><div class="s-lbl">Particles</div><div class="s-desc">Block break effects</div></div><div class="s-tog on" id="tog_particles" onclick="togSett('particles')"></div></div>
+      <div class="s-row"><div><div class="s-lbl">Smooth Camera</div><div class="s-desc">Camera lerp</div></div><div class="s-tog on" id="tog_smoothCam" onclick="togSett('smoothCam')"></div></div>
+      <div class="s-row"><div><div class="s-lbl">Sun &amp; Sky</div><div class="s-desc">Atmosphere effects</div></div><div class="s-tog on" id="tog_sunRays" onclick="togSett('sunRays')"></div></div>
+    </div>
+    <div class="s-section">
+      <h3>Gameplay</h3>
+      <div class="s-row"><div><div class="s-lbl">Break Speed</div></div><div style="display:flex;align-items:center;gap:6px"><input class="s-slide" type="range" id="sl_breakSpd" min="40" max="200" value="100" oninput="updSlider('breakSpd',this.value)"><span class="s-val" id="v_breakSpd">1.0x</span></div></div>
+      <div class="s-row"><div><div class="s-lbl">Move Speed</div></div><div style="display:flex;align-items:center;gap:6px"><input class="s-slide" type="range" id="sl_moveSpd" min="40" max="200" value="100" oninput="updSlider('moveSpd',this.value)"><span class="s-val" id="v_moveSpd">1.0x</span></div></div>
+    </div>
+    <div class="s-section">
+      <h3>World</h3>
+      <div class="s-row"><div><div class="s-lbl">Save Game</div></div><button class="s-btn" onclick="saveProgress();showToast('Saved!')">SAVE</button></div>
+      <div class="s-row"><div><div class="s-lbl">Reset World</div><div class="s-desc">Deletes everything</div></div><button class="s-btn danger" onclick="confirmReset()">RESET</button></div>
+    </div>
+    <div class="s-section">
+      <h3>Controls</h3>
+      <div class="s-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+        <div style="color:rgba(255,255,255,.3);font-size:8px;line-height:2.1;">WASD / Arrows — Move &amp; Jump<br>Q — Toggle Hit/Edit mode<br>1–8 — Hotbar slots · Tab — Cycle<br>Z — Punch · X/E — Use<br>Click HIT/EDIT button to switch modes</div>
+      </div>
+    </div>
+  </div>
+  <button class="p-close" onclick="closeSett()">CLOSE</button>
+</div>
+
+<!-- CHAT PANEL -->
+<div class="panel" id="chatPanel">
+  <div class="panel-head">CHAT</div>
+  <div id="chatWrap">
+    <div id="chatOnline"></div>
+    <div id="chatLog"></div>
+    <div id="chatBottom">
+      <input id="chatInput" type="text" maxlength="100" placeholder="Type a message..." autocomplete="off" autocorrect="off">
+      <button id="chatSend">SEND</button>
+    </div>
+  </div>
+  <button class="p-close" onclick="closeChat()">CLOSE</button>
+</div>
+
+<!-- SHOP PANEL -->
+<div class="panel" id="shopPanel">
+  <div class="panel-head">SHOP</div>
+  <div id="shopHeader">
+    <span>Your Gems:</span>
+    <div class="gemDot" style="width:8px;height:8px;"></div>
+    <span id="shopGems">0</span>
+  </div>
+  <div id="shopGrid"></div>
+  <button class="p-close" onclick="closeShop()">CLOSE</button>
+</div>
+
+<!-- PROFILE PANEL -->
+<div class="panel" id="profilePanel">
+  <div class="panel-head">PROFILE</div>
+  <div id="profileContent">
+    <div class="profile-top">
+      <div id="profileCharBox"><canvas id="profileCharCanvas" style="image-rendering:pixelated"></canvas></div>
+      <div class="profile-info">
+        <span id="profileName">Player</span>
+        <div class="profile-stat">Gems <span id="profileGems">0</span></div>
+        <div class="profile-stat">Level <span id="profileLevel">1</span></div>
+        <div class="profile-stat">Worlds <span id="profileWorlds">0</span></div>
+        <div class="profile-stat">Joined <span id="profileJoined">?</span></div>
+      </div>
+    </div>
+    <button id="profileTradeBtn" style="display:none">TRADE WITH THIS PLAYER</button>
+  </div>
+  <button class="p-close" onclick="closeProfile()">CLOSE</button>
+</div>
+
+<!-- TRADE PANEL -->
+<div class="panel" id="tradePanel">
+  <div class="panel-head">TRADE</div>
+  <div id="tradeContent">
+    <div style="color:rgba(255,255,255,.4);font-size:9px;text-align:center;margin-bottom:12px;letter-spacing:1px;">Trading with: <span id="tradeTarget" style="color:#e8b820;font-weight:bold;"></span></div>
+    <div class="trade-section">
+      <div class="trade-label">Your Offer</div>
+      <div id="tradeFromList"></div>
+    </div>
+    <div id="tradeStatus"></div>
+    <button class="tradeSendBtn" onclick="sendTrade()">SEND TRADE OFFER</button>
+  </div>
+  <button class="p-close" onclick="closeTrade()">CLOSE</button>
+</div>
+
+<!-- WORLD LOCK MENU -->
+<div id="worldLockMenu">
+  <div id="wlmBox">
+    <div id="wlmTitle">WORLD LOCK</div>
+    <div id="wlmOwner">Owner: ?</div>
+    <button class="wlmBtn protect" id="wlmProtect" onclick="wlmProtect()" style="display:none">
+      <canvas class="wlmBtnIcon" id="wlmIcon1"></canvas>
+      PROTECT WORLD
+    </button>
+    <button class="wlmBtn grant" id="wlmGrant" onclick="wlmGrant()" style="display:none">
+      <canvas class="wlmBtnIcon" id="wlmIcon2"></canvas>
+      GRANT ACCESS
+    </button>
+    <button class="wlmBtn trade" id="wlmTrade" onclick="wlmTrade()">
+      <canvas class="wlmBtnIcon" id="wlmIcon3"></canvas>
+      CAN BE TRADED
+    </button>
+    <button id="wlmClose" onclick="closeWorldLockMenu()">CLOSE</button>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script>
+// Hotbar slot clicks
+document.querySelectorAll('.hs').forEach((el,i)=>{
+  el.addEventListener('click',e=>{e.stopPropagation();if(typeof selHotbar==='function')selHotbar(i);});
+  el.addEventListener('touchstart',e=>{e.stopPropagation();if(typeof selHotbar==='function')selHotbar(i);},{passive:true});
+});
+</script>
+<script src="js/tiles.js"></script>
+<script src="js/world.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/main.js"></script>
+<script>
+window.addEventListener('load',()=>{
+  // Position edit toggle button relative to hotbar after layout
+  function positionEditBtn(){
+    const hb=document.getElementById('hotbar');const btn=document.getElementById('editToggleBtn');
+    if(!hb||!btn||hb.style.display==='none')return;
+    const hbRect=hb.getBoundingClientRect();
+    const ctrlH=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ctrl-h'))||148;
+    btn.style.bottom=(ctrlH+6)+'px';
+    btn.style.left=Math.max(4,hbRect.left-btn.offsetWidth-6)+'px';
+    if(hbRect.left<50){btn.style.left='4px';btn.style.bottom=(ctrlH+hb.offsetHeight+10)+'px';}
+  }
+  window.addEventListener('resize',positionEditBtn);
+  setTimeout(positionEditBtn,400);
+  // Draw worldlock icons in WLM
+  setTimeout(()=>{
+    ['wlmIcon1','wlmIcon2','wlmIcon3'].forEach(id=>{
+      const c=document.getElementById(id);if(!c)return;
+      c.width=c.height=14;drawTileCtx(c.getContext('2d'),0,0,T.WORLDLOCK,14);
+    });
+  },500);
+  // Register service worker
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+});
+</script>
+</body>
+</html>
